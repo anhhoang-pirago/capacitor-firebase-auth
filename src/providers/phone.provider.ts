@@ -1,8 +1,8 @@
 import firebase from 'firebase/app';
 
-import { PhoneSignInResult, SignInOptions } from '../definitions';
+import { PhoneSignInOptions, PhoneSignInResult } from '../definitions';
 
-export const phoneSignInWeb: (options: { providerId: string, data?: SignInOptions }) => Promise<PhoneSignInResult>
+export const phoneSignInWeb: (options: { providerId: string, data?: PhoneSignInOptions }) => Promise<PhoneSignInResult>
     = async (options) => {
         firebase.auth().useDeviceLanguage();
         const code = options.data?.verificationCode as string;

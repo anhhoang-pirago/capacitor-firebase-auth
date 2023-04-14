@@ -5,7 +5,8 @@ import firebase from 'firebase/app';
 import { Observable, throwError } from 'rxjs';
 
 import {
-  AppleSignInResult, CapacitorFirebaseAuthPlugin, FacebookSignInResult, GoogleSignInResult,
+  AppleSignInResult, CapacitorFirebaseAuthPlugin, EmailSignInOptions, FacebookSignInResult, GoogleSignInResult,
+  PhoneSignInOptions,
   PhoneSignInResult, SignInOptions, TwitterSignInResult
 } from './definitions';
 
@@ -24,7 +25,14 @@ export const cfaSignIn = (providerId: string, data?: SignInOptions): Observable<
 	const facebookProvider = new firebase.auth.FacebookAuthProvider().providerId;
 	const twitterProvider = new firebase.auth.TwitterAuthProvider().providerId;
 	const phoneProvider = new firebase.auth.PhoneAuthProvider().providerId;
+	const emailProvider = new firebase.auth.EmailAuthProvider().providerId;
 	switch (providerId) {
+		case emailProvider:
+			if (!data) {
+				throw new Error('Email and password data must be provided.')
+			}
+			const emailData = data as EmailSignInOptions
+			return cfaSignInEmail(emailData.email, emailData.password);
 		case googleProvider:
 			return cfaSignInGoogle();
 		case twitterProvider:
@@ -37,7 +45,8 @@ export const cfaSignIn = (providerId: string, data?: SignInOptions): Observable<
 			if (!data) {
 				throw new Error('Phone and Verification data must be provided.')
 			}
-			return cfaSignInPhone(data.phone, data.verificationCode);
+			const phoneData = data as PhoneSignInOptions
+			return cfaSignInPhone(phoneData.phone, phoneData.verificationCode);
 		default:
 			return throwError(new Error(`The '${providerId}' provider was not supported`));
 	}
@@ -161,6 +170,18 @@ export const cfaSignInApple = (): Observable<firebase.User> => {
 	});
 }
 
+export const cfaSignInEmail = (email: string, password: string): Observable<any> => {
+	return new Observable(observer => {
+		// get the provider id
+		const providerId = firebase.auth.EmailAuthProvider.PROVIDER_ID;
+
+		plugin.signIn({ providerId, data: { email, password } }).then((result: any) => {
+			console.log(result)
+
+		}).catch((reject: any) => observer.error(reject));
+
+	});
+};
 /**
  * Call the Phone verification sign in, handling send and retrieve to code on native, but only sign in on web with retrieved credentials.
  * @param phone The user phone number.

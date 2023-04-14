@@ -46,4 +46,9 @@ export interface PhoneSignInOptions {
   verificationCode?: string
 }
 
-export type SignInOptions = PhoneSignInOptions;
+export interface EmailSignInOptions {
+  email: string;
+  password: string;
+}
+
+export type SignInOptions = PhoneSignInOptions | EmailSignInOptions;

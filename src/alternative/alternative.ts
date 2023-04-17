@@ -5,7 +5,7 @@ import { Observable, throwError } from 'rxjs';
 
 import { CapacitorFirebaseAuth } from '../';
 import {
-  AppleSignInResult, FacebookSignInResult, GoogleSignInResult, PhoneSignInResult, SignInOptions,
+  AppleSignInResult, EmailSignInOptions, FacebookSignInResult, GoogleSignInResult, PhoneSignInOptions, PhoneSignInResult, SignInOptions,
   SignInResult, TwitterSignInResult
 } from '../definitions';
 
@@ -19,6 +19,7 @@ export const cfaSignIn = (providerId: string, data?: SignInOptions): Observable<
 	const facebookProvider = new firebase.auth.FacebookAuthProvider().providerId;
 	const twitterProvider = new firebase.auth.TwitterAuthProvider().providerId;
 	const phoneProvider = new firebase.auth.PhoneAuthProvider().providerId;
+	const emailProvider = new firebase.auth.EmailAuthProvider().providerId;
 	switch (providerId) {
 		case googleProvider:
 			return cfaSignInGoogle();
@@ -29,7 +30,14 @@ export const cfaSignIn = (providerId: string, data?: SignInOptions): Observable<
 		case cfaSignInAppleProvider:
 			return cfaSignInApple();
 		case phoneProvider:
-			return cfaSignInPhone(data?.phone as string, data?.verificationCode as string);
+			const phoneData = data as PhoneSignInOptions
+			return cfaSignInPhone(phoneData?.phone as string, phoneData?.verificationCode as string);
+		case emailProvider:
+			if (!data) {
+					throw new Error('Email and password data must be provided.')
+				}
+				const emailData = data as EmailSignInOptions
+				return cfaSignInEmail(emailData.email, emailData.password);
 		default:
 			return throwError(new Error(`The '${providerId}' provider was not supported`));
 	}
@@ -178,6 +186,19 @@ export const cfaSignInPhone = (phone: string, verificationCode?: string): Observ
 				.catch((reject: any) => observer.error(reject));
 
 		}).catch(reject => observer.error(reject));
+
+	});
+};
+
+export const cfaSignInEmail = (email: string, password: string): Observable<any> => {
+	return new Observable(observer => {
+		// get the provider id
+		const providerId = firebase.auth.EmailAuthProvider.PROVIDER_ID;
+
+		CapacitorFirebaseAuth.signIn({ providerId, data: { email, password } }).then((result: any) => {
+			console.log(result)
+
+		}).catch((reject: any) => observer.error(reject));
 
 	});
 };
